@@ -17,6 +17,9 @@ import torch
 import torch.nn.functional
 from torch.utils.data import Dataset
 import random
+####
+import math
+####
 
 def make_index_dict(label_csv):
     index_lookup = {}
@@ -98,7 +101,23 @@ class AudiosetDataset(Dataset):
     def _wav2fbank(self, filename, filename2=None):
         # mixup
         if filename2 == None:
-            waveform, sr = torchaudio.load(filename)
+            ####################################
+            #fix padding in audio tensor to resolve error in kaldi.py function def _get_waveform_and_window_properties()
+            wf, sr = torchaudio.load(filename)
+            frame_length = 25.0 #default in torch kaldi.py
+            MILLISECONDS_TO_SECONDS = 0.001
+            window_size = int(sr * frame_length * MILLISECONDS_TO_SECONDS) #kaldi.py calculation
+            wf_size = len(wf[0,:])
+            #Padding
+            if wf_size < window_size:
+                before = after = int(math.ceil((window_size - wf_size) / 2.0))
+                waveform = np.pad(wf[0,:],(before,after),'mean')
+                waveform = torch.from_numpy(np.array([waveform]))
+                assert 2 <= window_size <= len(waveform[0,:]), "choose a window size {} that is [2, {}]".format(
+                window_size, len(waveform[0,:]))
+            else:
+                waveform = wf
+            ####################################
             waveform = waveform - waveform.mean()
         # mixup
         else:
@@ -125,7 +144,7 @@ class AudiosetDataset(Dataset):
 
             mix_waveform = mix_lambda * waveform1 + (1 - mix_lambda) * waveform2
             waveform = mix_waveform - mix_waveform.mean()
-
+        
         fbank = torchaudio.compliance.kaldi.fbank(waveform, htk_compat=True, sample_frequency=sr, use_energy=False,
                                                   window_type='hanning', num_mel_bins=self.melbins, dither=0.0, frame_shift=10)
 
@@ -178,6 +197,7 @@ class AudiosetDataset(Dataset):
             datum = self.data[index]
             label_indices = np.zeros(self.label_num)
             fbank, mix_lambda = self._wav2fbank(datum['wav'])
+    
             for label_str in datum['labels'].split(','):
                 label_indices[int(self.index_dict[label_str])] = 1.0
 
