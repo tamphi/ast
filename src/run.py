@@ -157,6 +157,34 @@ if args.dataset == 'speechcommands':
     print('---------------evaluate on the validation set---------------')
     print("Accuracy: {:.6f}".format(val_acc))
     print("AUC: {:.6f}".format(val_mAUC))
+    
+    # test the model on the evaluation set
+    eval_loader = torch.utils.data.DataLoader(
+        dataloader.AudiosetDataset(args.data_eval, label_csv=args.label_csv, audio_conf=val_audio_conf),
+        batch_size=args.batch_size*2, shuffle=False, num_workers=args.num_workers, pin_memory=True)
+    stats, _ = validate(audio_model, eval_loader, args, 'eval_set')
+    eval_acc = stats[0]['acc']
+    eval_mAUC = np.mean([stat['auc'] for stat in stats])
+    print('---------------evaluate on the test set---------------')
+    print("Accuracy: {:.6f}".format(eval_acc))
+    print("AUC: {:.6f}".format(eval_mAUC))
+    np.savetxt(args.exp_dir + '/eval_result.csv', [val_acc, val_mAUC, eval_acc, eval_mAUC])
+
+
+if args.dataset == 'shipsear':
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    sd = torch.load(args.exp_dir + '/models/best_audio_model.pth', map_location=device)
+    audio_model = torch.nn.DataParallel(audio_model)
+    audio_model.load_state_dict(sd)
+
+    # best model on the validation set
+    stats, _ = validate(audio_model, val_loader, args, 'valid_set')
+    # note it is NOT mean of class-wise accuracy
+    val_acc = stats[0]['acc']
+    val_mAUC = np.mean([stat['auc'] for stat in stats])
+    print('---------------evaluate on the validation set---------------')
+    print("Accuracy: {:.6f}".format(val_acc))
+    print("AUC: {:.6f}".format(val_mAUC))
 
     # test the model on the evaluation set
     eval_loader = torch.utils.data.DataLoader(
@@ -169,4 +197,7 @@ if args.dataset == 'speechcommands':
     print("Accuracy: {:.6f}".format(eval_acc))
     print("AUC: {:.6f}".format(eval_mAUC))
     np.savetxt(args.exp_dir + '/eval_result.csv', [val_acc, val_mAUC, eval_acc, eval_mAUC])
+
+
+
 
