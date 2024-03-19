@@ -220,5 +220,5 @@ Also, please note that we use `16kHz` audios for the pretrained model, so if you
 
 
  ## Contact
-If you have a question, please bring up an issue (preferred) or send me an email yuangong@mit.edu.
+If you have a question, please bring up an issue (preferred) or send me an email thp29@drexel.edu.
 
