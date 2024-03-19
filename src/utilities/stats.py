@@ -43,15 +43,27 @@ def calculate_stats(output, target):
         (fpr, tpr, thresholds) = metrics.roc_curve(target[:, k], output[:, k])
 
         save_every_steps = 1000     # Sample statistics to reduce size
-        dict = {'precisions': precisions[0::save_every_steps],
-                'recalls': recalls[0::save_every_steps],
+        ####################################
+        # dict = {'precisions': precisions[0::save_every_steps],
+        #         'recalls': recalls[0::save_every_steps],
+        #         # 'recalls': recalls,
+        #         'AP': avg_precision,
+        #         'fpr': fpr[0::save_every_steps],
+        #         'fnr': 1. - tpr[0::save_every_steps],
+        #         'auc': auc,
+        #         # note acc is not class-wise, this is just to keep consistent with other metrics
+        #         'acc': acc
+        #         }
+        dict = {'precisions': precisions,
+                'recalls': recalls,
                 'AP': avg_precision,
-                'fpr': fpr[0::save_every_steps],
-                'fnr': 1. - tpr[0::save_every_steps],
+                'fpr': fpr,
+                'fnr': 1. - tpr,
                 'auc': auc,
                 # note acc is not class-wise, this is just to keep consistent with other metrics
                 'acc': acc
                 }
+        ####################################
         stats.append(dict)
 
     return stats
