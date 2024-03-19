@@ -41,7 +41,7 @@ def train(audio_model, train_loader, test_loader, args):
                 time.time() - start_time])
         with open("%s/progress.pkl" % exp_dir, "wb") as f:
             pickle.dump(progress, f)
-
+    #create neuralnet if audio_model is not one already (pretrain=false)        
     if not isinstance(audio_model, nn.DataParallel):
         audio_model = nn.DataParallel(audio_model)
 
@@ -105,9 +105,11 @@ def train(audio_model, train_loader, test_loader, args):
         print('---------------')
         print(datetime.datetime.now())
         print("current #epochs=%s, #steps=%s" % (epoch, global_step))
-
+        ##############################
+        train_pred =[]
+        ##############################
         for i, (audio_input, labels) in enumerate(train_loader):
-
+            
             B = audio_input.size(0)
             audio_input = audio_input.to(device, non_blocking=True)
             labels = labels.to(device, non_blocking=True)
@@ -125,6 +127,11 @@ def train(audio_model, train_loader, test_loader, args):
 
             with autocast():
                 audio_output = audio_model(audio_input)
+                ######
+                output_prob = torch.sigmoid(audio_output)
+                pred = output_prob.to('cpu').detach()
+                train_pred.append(pred)
+                ######
                 if isinstance(loss_fn, torch.nn.CrossEntropyLoss):
                     loss = loss_fn(audio_output, torch.argmax(labels.long(), axis=1))
                 else:
