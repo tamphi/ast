@@ -64,6 +64,13 @@ Please cite our paper(s) if you find this repository useful. The first paper pro
 
 Step 1. Clone or download this repository and set it as the working directory, create a virtual environment and install the dependencies.
 
+For imaple server, we use different GPU and GPU driver from the original papers, so please check the version accordingly with the following command: 
+
+nvidia-smi
+
+
+June 2023, the GPU driver is sm86 and req_sm86.txt includes library version appropriate for the driver version
+
 ```
 cd ast/ 
 python3 -m venv venvast
