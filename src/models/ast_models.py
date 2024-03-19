@@ -70,10 +70,12 @@ class ASTModel(nn.Module):
             self.original_num_patches = self.v.patch_embed.num_patches
             self.oringal_hw = int(self.original_num_patches ** 0.5)
             self.original_embedding_dim = self.v.pos_embed.shape[2]
+            # print(self.original_embedding_dim) # 768 embedding dim
             self.mlp_head = nn.Sequential(nn.LayerNorm(self.original_embedding_dim), nn.Linear(self.original_embedding_dim, label_dim))
 
             # automatcially get the intermediate shape
             f_dim, t_dim = self.get_shape(fstride, tstride, input_fdim, input_tdim)
+            print(f_dim,t_dim)
             num_patches = f_dim * t_dim
             self.v.patch_embed.num_patches = num_patches
             if verbose == True:
@@ -108,6 +110,7 @@ class ASTModel(nn.Module):
             else:
                 # if not use imagenet pretrained model, just randomly initialize a learnable positional embedding
                 # TODO can use sinusoidal positional embedding instead
+                # print(self.v.patch_embed.num_patches)
                 new_pos_embed = nn.Parameter(torch.zeros(1, self.v.patch_embed.num_patches + 2, self.original_embedding_dim))
                 self.v.pos_embed = new_pos_embed
                 trunc_normal_(self.v.pos_embed, std=.02)
